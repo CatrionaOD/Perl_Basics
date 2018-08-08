@@ -1,0 +1,136 @@
+use Term::ANSIColor;
+use Sys::Hostname;
+use Getopt::Long qw(GetOptions);
+use File::Path qw( rmtree );
+use Data::Dumper qw(Dumper);
+use Text::CSV;                          # Used for reading, parsing, and writing CSV files
+use List::MoreUtils qw(uniq);
+
+my $filename = 'test.txt';
+open(my $fh, '<:encoding(UTF-8)', $filename)
+  or die "Could not open file '$filename' $!";
+
+my $t = time();         # second since 1/1/70
+
+#===============================================
+## PRINT OUT FILE ##
+while (my $row = <$fh>) {      # true if next line has anything on it
+        chomp $row;
+        print "$row\n";
+        }
+#================================================
+## PRINT OUT ARRAY & ARRAY SIZE ##
+my @names = ("ABC", "DEF", "GHI");
+
+foreach my $n (@names) {
+       say $n;
+}
+
+foreach my $i (0 .. $#names) {
+        say "$i - $names[$i]";         # eg. "0 - ABC"
+        }
+
+say scalar @names;             # Give size of array
+
+my @words = ('AB', 'CD', 'EF');
+say scalar @words;      # AB CD EF;    # Also gives array size
+
+push @names, 'XYZ';
+foreach my $i (0 .. $#names) {
+        say "$i - $names[$i]";
+        }
+#==================================================
+## SEE IF FLAG IS SET ##
+my $source_address = 'Default';                        # If "-from" isn't passed in through command line, "Default" is returned.
+my $debug;
+GetOptions(
+        'from=s' => \$source_address,
+        'debug' => \$debug,
+) or die "Usage: $0 --debug --from NAME\n";
+
+say $debug ? 'debug' : 'no debug';
+if ($source_address) {
+        say $source_address;
+}
+#==================================================
+## SPLIT STRING ##
+my $str = "ab cd ef gh ij";
+my @words = split / /, $str, 2;                # Splits string into n parts based on " " regex
+
+my $file = $ARGV[0] or die "Need to put CSV file on command line\n";
+
+my $sum = 0;
+open(my $data, '<', $file) or die "Could not open $file' $!\n";
+
+while (my $line = <$data>) {
+    	chomp $line;
+        my @fields = split "," , $line;
+        $sum += $fields[2];                    # Add the values in the third column together
+}
+#===================================================
+## ADD VALUES FROM A CSV FILE TOGETHER ##
+my $csv = Text::CSV->new({
+                binary => 1,
+                auto_diag => 1,
+                sep_char => ','                # Call constructor 'new', using '->'. This sets the seperator char to be ','
+});
+my $file = $ARGV[0] or die "Need to put CSV file on command line\n";
+
+my $sum =0;
+open(my $data, '<:encoding(utf8)', $file) or die "Could not open '$file' $!\n";
+while (my $fields = $csv->getline( $data )) {
+        $sum += $fields->[2];
+}
+        if(not $csv->eof) {
+                $csv->error_diag();
+}
+#===================================================
+## JOIN STRINGS ##
+my @names = ('Ben', 'Jill', 'Ted');
+my $str = join ':', @names;
+say $str;              # Ben:Jill:Ted
+
+my $data = join "-", $str, "names";
+say $data;             # Ben:Jill:Ted-names
+
+$str = join '', @names, 'Jen';
+say $str;              # BenJillTedJen
+#===================================================
+## GET ELAPSED TIME ##
+say 'Elapsed time: ', (time()-$t);
+#===================================================
+## PRINT TEXT INPUT BY USER ##
+print "Please type in your name: ";
+my $name = <STDIN>;    # takes everything we type including the ENTER at the end
+chomp $name;           # chomp eliminates trailing newlines
+print "Hello $name, how are you?\n";
+
+print "Please type in the names of the programming languages you know: ";
+my @names = <STDIN>;   # Requires user to press ENTER after each language, then CTRL-D to end
+chomp @names;
+print "That's a lot, you know: " . scalar(@names) . "\n";      # Gives number of languages mentioned
+#===================================================
+## SORT STRINGS AND NUMBERS ##
+my @words = qw(c a z f d Z);   # "qw(c a z f d Z)" == "('foo', 'bar', 'zorg')"
+my @sorted_words = sort { lc($a) cmp lc($b) } @words;  # use 'lc' to compare all as lower case versions
+say Dumper \@sorted_words;
+
+my @numbers = ( 14, 3, 12, 2, 23);
+my @sorted_numbers = sort { $a <=> $b } @numbers;      # <=> returns either 1/-1/0
+say Dumper \@sorted_numbers;
+#===================================================
+## PRINT WITHOUT DUPLICATES ##
+my @words = qw(foo bar baz foo zorg baz);
+my @unique_words = uniq @words;
+say Dumper \@unique_words;
+#===================================================
+## PUSH & POP ARRAY ##
+my @names = ('Foo', 'Bar');
+push @names, 'Moo';
+print "@names\n";     # Foo Bar Moo
+
+my @others = ('Darth', 'Vader');
+push @names, @others;
+print "@names\n";     # Foo Bar Moo Darth Vader
+
+                                                                                                                    136,1         63%
